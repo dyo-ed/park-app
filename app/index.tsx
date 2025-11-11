@@ -1,16 +1,21 @@
+import { supabase } from '@/lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Button, Image, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function AuthScreen() {
   const router = useRouter();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [userName, setUserName] = useState('')
   const [repeatPassword, setRepeatPassword] = useState('');
   const [login, setLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('')
+  const [userId, setUserId] = useState<string | null>(null)
+  const [role, setRole] = useState<string | null>(null)
 
   // Check if user is already logged in
   const checkLoginStatus = useCallback(async () => {
@@ -34,19 +39,67 @@ export default function AuthScreen() {
       return Alert.alert('Error', 'Please enter a valid email and password');
     }
 
-    if (!login && password !== repeatPassword) {
-      return Alert.alert('Error', 'Passwords do not match');
+    if (!login) {
+      if (password !== repeatPassword) {
+        return Alert.alert('Error', 'Passwords do not match');
+      } if (!userName) {
+        return Alert.alert('Error', 'Give a valid name');
+      }
     }
 
     setLoading(true);
 
     try {
-      // Simulate login/signup API
-      // For demo, we just store the email in AsyncStorage
-      await AsyncStorage.setItem('userEmail', email);
+      if (login) {
+        let { data, error } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password
+        })
+        setUserId(data.user?.id || null)
+        await AsyncStorage.setItem('user_id', data.user?.id || '');
+        console.log(data)
 
-      // Redirect to detect screen
-      router.replace('/(tabs)/detect');
+        if(data.session) {
+          router.replace('/(tabs)/detect');
+        }
+
+        if (error) {
+          setError(error.message)
+        }
+      }
+     else {
+      // 1️⃣ Sign up the user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      const newUserId = data.user?.id;
+      if (!newUserId) throw new Error('Failed to get user ID');
+
+      setUserId(newUserId);
+
+      // 2️⃣ Insert profile with user ID and name
+      const { data: profileData, error: profileError } = await supabase
+        .from('profile')
+        .insert([{ id: newUserId, name: userName }])
+        .select();
+
+      if (profileError) throw profileError;
+
+      console.log('Profile created:', profileData);
+
+      // 3️⃣ Save user ID locally
+      await AsyncStorage.setItem('user_id', newUserId);
+
+
+      router.replace('./role-selection');
+
+      return; // stop further navigation
+    }
+
     } catch (error: any) {
       console.error('Auth error:', error);
       Alert.alert('Error', error.message || 'Authentication failed');
@@ -61,6 +114,14 @@ export default function AuthScreen() {
       <Text style={styles.subtitle}>Welcome to ParkAlert</Text>
 
       <View style={styles.content}>
+        {!login &&
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          value={userName}
+          onChangeText={setUserName}
+        />
+        }
         <TextInput
           style={styles.input}
           placeholder="example@email.com"
@@ -83,24 +144,23 @@ export default function AuthScreen() {
             secureTextEntry
           />
         )}
+        <Text style={styles.error}>{error}</Text>
         <Text>
           {login ? "Don't have an account? " : 'Already have an account? '}
           <Text
             style={{ color: 'blue' }}
-            onPress={() => setLogin(!login)}
+            onPress={() => {
+              setLogin(!login)
+              setError('')
+            }}
           >
             {login ? 'Sign Up' : 'Login'}
           </Text>
         </Text>
       </View>
-
-      <View style={styles.buttonContainer}>
-        <Button
-          title={loading ? 'Please wait...' : login ? 'Login' : 'Sign Up'}
-          onPress={handleAuth}
-          disabled={loading}
-        />
-      </View>
+      <TouchableOpacity style={styles.button} onPress={handleAuth}>
+        <Text style={{color:'white'}}>{loading ? 'Please wait...' : login ? 'Login' : 'Sign Up'}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -143,4 +203,19 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     transform: [{ translateY: -40 }],
   },
+  error: {
+    fontSize: 12,
+    color: 'red',
+    paddingBlock: 8,
+    textAlign: 'center'
+  },
+  button: {
+    backgroundColor: '#007BFF',
+    borderRadius: 50,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    marginBlock:16
+  }
 });

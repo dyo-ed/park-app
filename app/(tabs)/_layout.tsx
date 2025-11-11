@@ -21,27 +21,6 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerRight: () => <Button title="Logout" onPress={handleLogout} />,
-        tabBarStyle: {
-          position: 'absolute',
-          bottom: 16,
-          left: 16,
-          right: 16,
-          backgroundColor: '#fff',
-          borderRadius: 25,
-          height: 60,
-          elevation: 5, // Android shadow
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 5, // iOS shadow
-        },
-        tabBarActiveTintColor: '#007BFF',
-        tabBarInactiveTintColor: '#999',
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-          paddingBottom: 4,
-        },
       }}
     >
       <Tabs.Screen name="detect" options={{ title: 'Park Alert' }} />

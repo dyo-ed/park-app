@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl || 'your-supabase-url';
 // const supabaseKey = Constants.expoConfig?.extra?.supabaseAnonKey || 'your-supabase-anon-key';
-const supabaseUrl = "https://fwugapivrojysjeqhgei.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3dWdhcGl2cm9qeXNqZXFoZ2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MTY4NTksImV4cCI6MjA3NTQ5Mjg1OX0.SZXpJTlNpFghsUSF-SC4CGnu56tMF8sMyPOu6bG6SKs";
+const supabaseUrl = "https://tyiiawylacwgxproemzc.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5aWlhd3lsYWN3Z3hwcm9lbXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3ODAxOTQsImV4cCI6MjA3ODM1NjE5NH0.7MbM7pazCbIip_fzUpLNgsqCHz9YrnRw0iCjgRqcVzU";
 
 if (!supabaseUrl || !supabaseKey) {
   throw new Error('Supabase URL or ANON KEY is missing!');
