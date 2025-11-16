@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import * as ImagePicker from 'expo-image-picker';
 import { useVideoPlayer, VideoSource, VideoView } from 'expo-video';
 import React, { useEffect, useState } from 'react';
+import * as FileSystem from "expo-file-system";
 import { ActivityIndicator, Alert, Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -60,6 +61,7 @@ export default function VideoUpload() {
   // --- Upload Video to Flask ---
   const uploadVideo = async () => {
     const api_url = await AsyncStorage.getItem('server-http');
+
     if (!videoUri) return alert('Pick a video first');
 
     setProcessing(false);
@@ -69,7 +71,7 @@ export default function VideoUpload() {
 
     const formData = new FormData();
     formData.append('video', {
-      uri: Platform.OS === 'ios' ? videoUri.replace('file://', '') : videoUri,
+      uri: videoUri,
       type: 'video/mp4',
       name: 'input.mp4',
     } as any);
