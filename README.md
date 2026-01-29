@@ -1,50 +1,130 @@
-# Welcome to your Expo app 👋
+# Project Setup Guide
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This repository contains a frontend (Expo / Node.js) and a backend (Python) that communicate via **ngrok** for local development.
 
-## Get started
+Follow the steps below carefully to get everything running.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## Prerequisites
 
-2. Start the app
+Make sure the following are installed **before** proceeding:
 
-   ```bash
-   npx expo start
-   ```
+- **Python 3.11 or higher**
+- **Node.js** (LTS recommended)
+- **Ngrok** (app + account)
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 1. NGROK Setup (Required)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 1.1 Create an ngrok Account
+1. Go to the ngrok website
+2. Sign up or log in
+3. Navigate to your dashboard
+4. Copy your **Auth Token**
 
-## Get a fresh project
+---
 
-When you're ready, run:
+### 1.2 Install ngrok
+Download and install ngrok for your operating system.
+
+Verify installation:
 
 ```bash
-npm run reset-project
+ngrok version
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+### 1.3 Configure ngrok (Sign In via Terminal)
 
-To learn more about developing your project with Expo, look at the following resources:
+Run the following command and replace `YOUR_AUTH_TOKEN` with the token from your dashboard:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+ngrok config add-authtoken YOUR_AUTH_TOKEN
+```
 
-## Join the community
+If successful, ngrok is now linked to your account.
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 2. Frontend Setup
+
+Install frontend dependencies:
+
+```bash
+npm install
+```
+
+Start the Expo development server:
+
+```bash
+npx expo start
+```
+
+Keep this terminal **running**.
+
+---
+
+## 3. Start ngrok Tunnel
+
+Open **a new terminal window**.
+
+Run ngrok on port **5000**:
+
+```bash
+ngrok http 5000
+```
+
+You will see output similar to:
+
+```bash
+Forwarding https://82153db9cb99.ngrok-free.app -> http://localhost:5000
+```
+
+---
+
+## 4. Update ngrok Configuration
+
+1. Copy the **https forwarding URL**  
+   Example:
+   https://82153db9cb99.ngrok-free.app
+
+2. Navigate to:
+   
+```bash
+   ./backend/ngrok_config.json
+```
+
+3. Replace the existing URL value with your copied ngrok URL.
+
+⚠️ This step must be repeated every time ngrok generates a new URL.
+
+---
+
+## 5. Run the Backend Server
+
+Navigate to the backend folder:
+
+```bash
+cd backend
+```
+
+Run the server using:
+
+```bash
+run_server.bat
+```
+
+This will start the Python backend on port **5000**, exposed via ngrok.
+
+---
+
+## Done 🎉
+
+- Frontend running via Expo
+- Backend running via Python
+- ngrok exposing the backend publicly
+
+Make sure all required terminals remain open.
