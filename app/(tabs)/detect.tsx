@@ -1,17 +1,18 @@
+import { BACKEND_BASE_URL } from '@/constants/backend';
 import { supabase } from '@/lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import dayjs from 'dayjs';
 import * as ImagePicker from 'expo-image-picker';
 import { useVideoPlayer, VideoSource, VideoView } from 'expo-video';
 import React, { useEffect, useState } from 'react';
-import * as FileSystem from "expo-file-system";
-import { ActivityIndicator, Alert, Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
 export default function VideoUpload() {
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const [processedVideoUri, setProcessedVideoUri] = useState<string | null>(null);
+  const [snapshotUri, setSnapshotUri] = useState<string | null>(null);
   const [violationCount, setViolationCount] = useState(0);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processing, setProcessing] = useState(false);
@@ -54,27 +55,42 @@ export default function VideoUpload() {
       const uri = result.assets[0].uri;
       setVideoUri(uri);
       setProcessedVideoUri(null);
+      setSnapshotUri(null);
       setViolationCount(0);
     }
   };
 
   // --- Upload Video to Flask ---
   const uploadVideo = async () => {
-    const api_url = await AsyncStorage.getItem('server-http');
+    const api_url = BACKEND_BASE_URL;
+
+    if (!api_url) {
+      Alert.alert('Missing backend URL', 'Update backend/ngrok_config.json with your ngrok tunnel URL.');
+      return;
+    }
 
     if (!videoUri) return alert('Pick a video first');
 
     setProcessing(false);
     setUploadProgress(0);
     setProcessedVideoUri(null);
+    setSnapshotUri(null);
     setViolationCount(0);
 
     const formData = new FormData();
-    formData.append('video', {
-      uri: videoUri,
-      type: 'video/mp4',
-      name: 'input.mp4',
-    } as any);
+    if (Platform.OS === 'web') {
+      // On web, fetch the URI to get a real Blob/File; RN web FormData needs a File/Blob.
+      const response = await fetch(videoUri);
+      const blob = await response.blob();
+      formData.append('video', blob, 'input.mp4');
+    } else {
+      // Native: send the file via URI.
+      formData.append('video', {
+        uri: videoUri,
+        type: 'video/mp4',
+        name: 'input.mp4',
+      } as any);
+    }
 
     try {
       const xhr = new XMLHttpRequest();
@@ -96,6 +112,9 @@ export default function VideoUpload() {
             const data = JSON.parse(xhr.responseText);
             setViolationCount(data.tracked_objects || 0);
             setProcessedVideoUri(data.video_url);
+            if (data.snapshot_url) {
+              setSnapshotUri(data.snapshot_url);
+            }
           } catch (err) {
             Alert.alert('Error', 'Invalid server response');
           }
@@ -166,6 +185,18 @@ export default function VideoUpload() {
             style={{ width: width - 40, height: 200 }}
             nativeControls
             contentFit="contain"
+          />
+        </View>
+      )}
+
+      {/* Snapshot with Bounding Boxes */}
+      {snapshotUri && (
+        <View style={styles.videoWrapper}>
+          <Text style={{ marginBottom: 6, fontWeight: '600' }}>Detected Snapshot</Text>
+          <Image
+            source={{ uri: snapshotUri }}
+            style={{ width: width - 40, height: 200, borderRadius: 12 }}
+            resizeMode="contain"
           />
         </View>
       )}

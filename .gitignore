@@ -2,6 +2,7 @@
 
 # dependencies
 node_modules/
+backend/.venv/
 
 # Expo
 .expo/
@@ -41,3 +42,4 @@ app-example
 # generated native folders
 /ios
 /android
+package-lock.json

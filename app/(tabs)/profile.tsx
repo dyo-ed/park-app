@@ -1,3 +1,4 @@
+import { BACKEND_BASE_URL, NGROK_CONFIG_LOCATION } from '@/constants/backend';
 import { supabase } from '@/lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -10,7 +11,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -32,7 +32,6 @@ export default function Profile() {
   const [violationMonth, setViolationMonth] = useState(0);
   const [mostCommon, setMostCommon] = useState('No Parking Zone');
   const [loading, setLoading] = useState(true);
-  const [serverUrl, setServerUrl] = useState('');
   const [violations, setViolations] = useState<Violation[]>([]);
 
   const updateViolationStats = useCallback((violationsData: any[]) => {
@@ -111,10 +110,6 @@ export default function Profile() {
       if (violationError) console.error('Error fetching violations:', violationError);
       else if (violationsData) updateViolationStats(violationsData);
 
-      // Load saved server URL
-      const savedServerUrl = await AsyncStorage.getItem('server-http');
-      if (savedServerUrl) setServerUrl(savedServerUrl);
-
       setLoading(false);
 
       // ✅ Subscribe to realtime changes in violation_history
@@ -138,20 +133,6 @@ export default function Profile() {
 
     fetchProfileAndViolations();
   }, [handleRealtimeChange, updateViolationStats]);
-
-  const handleSaveServerUrl = async () => {
-    try {
-      if (!serverUrl.trim()) {
-        Alert.alert('Error', 'Please enter a valid server URL');
-        return;
-      }
-      await AsyncStorage.setItem('server-http', serverUrl.trim());
-      Alert.alert('✅ Success', 'Server URL saved successfully!');
-    } catch (error) {
-      console.error('Error saving server URL:', error);
-      Alert.alert('❌ Error', 'Failed to save server URL');
-    }
-  };
 
   const changeAvatar = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -259,19 +240,15 @@ export default function Profile() {
         </View>
       </View>
 
-      {/* ✅ Add Server URL Input Section */}
+      {/* ✅ Backend URL (ngrok) */}
       <View style={styles.serverContainer}>
-        <Text style={styles.serverLabel}>Flask Server URL:</Text>
-        <TextInput
-          style={styles.serverInput}
-          placeholder="http://192.168.x.x:5000"
-          value={serverUrl}
-          onChangeText={setServerUrl}
-          autoCapitalize="none"
-        />
-        <TouchableOpacity style={styles.saveButton} onPress={handleSaveServerUrl}>
-          <Text style={styles.saveButtonText}>Save Server URL</Text>
-        </TouchableOpacity>
+        <Text style={styles.serverLabel}>Backend URL (ngrok tunnel)</Text>
+        <Text style={styles.serverInfo}>
+          {BACKEND_BASE_URL || 'Update backend/ngrok_config.json with your tunnel URL'}
+        </Text>
+        <Text style={styles.serverHint}>
+          Edit {NGROK_CONFIG_LOCATION} after you start ngrok so the app and server stay in sync.
+        </Text>
       </View>
 
       {/* ✅ Summary Card */}
@@ -350,21 +327,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   serverLabel: { fontSize: 14, fontWeight: '600', marginBottom: 8, color: '#333' },
-  serverInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    padding: 10,
-    backgroundColor: '#f9f9f9',
-    marginBottom: 10,
-  },
-  saveButton: {
-    backgroundColor: '#007BFF',
-    paddingVertical: 8,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  saveButtonText: { color: '#fff', fontWeight: '600' },
+  serverInfo: { fontSize: 14, fontWeight: '600', color: '#222' },
+  serverHint: { fontSize: 12, color: '#666', marginTop: 6 },
   summaryCard: { backgroundColor: '#fff', borderRadius: 16, padding: 16, elevation: 3, marginBottom: 20 },
   summaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   summaryTitle: { fontSize: 16, fontWeight: '700', color: '#333' },
